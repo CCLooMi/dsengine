@@ -1,0 +1,29 @@
+group "ccloomi.com"
+version '1.0'
+apply plugin: 'java'
+apply plugin: 'eclipse'
+allprojects {
+	repositories {
+		maven{url='http://localhost:8081/repository/alimaven-central/'}
+		maven{url="http://localhost:8081/repository/maven-releases/"}
+	}
+}
+dependencies {
+        def springVersion		= "4.3.6.RELEASE"
+        def jacksonVersion		= "2.9.4"
+		def logbackVersion		= "1.2.3"
+		def slf4jVersion			= "1.7.25"
+		def springBootVersion	= "2.0.0.RELEASE"
+		def tomcatembedVersion	= "9.0.6"
+    compile (
+		["org.rocksdb:rocksdbjni:5.11.3"],
+		//["org.eclipse.jdt.core.compiler:ecj:4.6.1"],
+		["org.slf4j:slf4j-api:$slf4jVersion"],
+		["ch.qos.logback:logback-core:$logbackVersion"],
+		["ch.qos.logback:logback-classic:$logbackVersion"],
+		["com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion"],
+		["com.fasterxml.jackson.core:jackson-core:$jacksonVersion"],
+		["com.fasterxml.jackson.core:jackson-databind:$jacksonVersion"],
+    		fileTree(dir: 'libs', include: '*.jar'))
+    testCompile(["junit:junit:4.+"])
+}
