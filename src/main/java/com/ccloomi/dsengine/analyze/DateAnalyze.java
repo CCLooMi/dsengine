@@ -1,5 +1,8 @@
 package com.ccloomi.dsengine.analyze;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.ccloomi.dsengine.util.ArraysUtil;
 import com.ccloomi.dsengine.util.StringUtil;
 
@@ -9,7 +12,7 @@ import com.ccloomi.dsengine.util.StringUtil;
  * @邮箱 chenios@foxmail.com
  * @日期 2016年12月23日-下午3:14:07
  */
-public class DateAnalyze implements IndexAnalyze{
+public class DateAnalyze extends BaseAnalyze{
 	private static final long serialVersionUID = 4894936490930681246L;
 
 	@Override
@@ -29,9 +32,19 @@ public class DateAnalyze implements IndexAnalyze{
 		result[3]="21_"+dt[2].substring(0, 2);
 		return result;
 	}
-
+	
 	@Override
 	public String analyzeEL(String el) {
 		return StringUtil.joinString("&", analyze(el));
+	}
+
+	@Override
+	protected Map<String, ?> value2Map(Object value) {
+		Map<String, ?>m=new HashMap<>();
+		String[]ss=analyze(value);
+		for(int i=0;i<ss.length;i++) {
+			m.put(ss[i], null);
+		}
+		return m;
 	}
 }

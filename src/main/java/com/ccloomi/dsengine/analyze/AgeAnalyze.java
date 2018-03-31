@@ -1,12 +1,14 @@
 package com.ccloomi.dsengine.analyze;
 
+import java.util.Map;
+
 /**@类名 AgeAnalyze
  * @说明 
  * @作者 Chenxj
  * @邮箱 chenios@foxmail.com
  * @日期 2016年12月23日-下午4:18:59
  */
-public class AgeAnalyze implements IndexAnalyze{
+public class AgeAnalyze extends BaseAnalyze{
 	private static final long serialVersionUID = 2154440468538242425L;
 
 	@Override
@@ -34,7 +36,7 @@ public class AgeAnalyze implements IndexAnalyze{
 	}
 
 	@Override
-	public String analyzeEL(String el) {
+	protected Map<String, ?> value2Map(Object value) {
 		// TODO Auto-generated method stub
 		return null;
 	}

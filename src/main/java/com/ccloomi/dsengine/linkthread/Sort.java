@@ -5,7 +5,7 @@ import static com.ccloomi.dsengine.EngineConfigure.topMax;
 import java.util.Arrays;
 import java.util.Comparator;
 
-import com.ccloomi.dsengine.Schema;
+import com.ccloomi.dsengine.DataAccess;
 import com.ccloomi.dsengine.bean.MapBean;
 
 
@@ -17,14 +17,16 @@ import com.ccloomi.dsengine.bean.MapBean;
  */
 public class Sort extends BaseLinkedThread<MapBean, MapBean[]>{
 	
+	private DataAccess da;
+	
 	private MapBean[]docs;
 	private Comparator<MapBean>baseSort;
 	private int docCount=0;
 	private int pageCount=0;
 	
-	public Sort(Schema schema){
+	public Sort(DataAccess da){
 		this.setName("LinkThread_C-Document Sort");
-		this.schema=schema;
+		this.da=da;
 		this.docs=new MapBean[topMax];
 		this.baseSort=new Comparator<MapBean>() {
 			@Override
@@ -54,7 +56,7 @@ public class Sort extends BaseLinkedThread<MapBean, MapBean[]>{
 			pageCount=0;
 			if(t.getScore()>docs[0].getScore()){
 				//回收map对象
-				schema.getMbpool().recyc(docs[0]);
+				da.recycMapBean(docs[0]);
 				//对已排序数组没有必要两两交换，只需要所有比t小的数据左移动就可以了
 				int i=1;
 				for(;i<topMax;i++){
@@ -67,7 +69,7 @@ public class Sort extends BaseLinkedThread<MapBean, MapBean[]>{
 				docs[i-1]=t;
 			}else{
 				//回收Map对象
-				schema.getMbpool().recyc(t);
+				da.recycMapBean(t);
 			}
 		}else{//数据查找阶段
 			if(pageCount==topMax){
@@ -75,7 +77,7 @@ public class Sort extends BaseLinkedThread<MapBean, MapBean[]>{
 			}
 			if(t.getScore()>docs[0].getScore()){
 				//回收map对象
-				schema.getMbpool().recyc(docs[0]);
+				da.recycMapBean(docs[0]);
 				//对已排序数组没有必要两两交换，只需要所有比t小的数据左移动就可以了
 				int i=1;
 				for(;i<topMax;i++){
@@ -88,7 +90,7 @@ public class Sort extends BaseLinkedThread<MapBean, MapBean[]>{
 				docs[i-1]=t;
 			}else {
 				//回收Map对象
-				schema.getMbpool().recyc(t);
+				da.recycMapBean(t);
 			}
 		}
 		pageCount++;

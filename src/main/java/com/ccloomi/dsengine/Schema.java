@@ -20,14 +20,12 @@ public class Schema {
 	private SchemaField[]fieldsArray;
 	private Map<String, SchemaField>fieldMap;
 	private boolean fieldChange;
-	private MapBeanPool mbpool;
 	
 	public Schema(String name) {
 		this.name=name;
 		this.fields=new ArrayList<>();
 		this.fieldMap=new HashMap<>();
 		this.fieldChange=false;
-		this.mbpool=new MapBeanPool();
 	}
 	public Schema addField(SchemaField field) {
 		fields.add(field);
@@ -51,8 +49,5 @@ public class Schema {
 	}
 	public void setName(String name) {
 		this.name = name;
-	}
-	public MapBeanPool getMbpool() {
-		return mbpool;
 	}
 }

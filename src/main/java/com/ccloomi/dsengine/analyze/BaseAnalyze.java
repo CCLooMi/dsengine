@@ -1,7 +1,7 @@
 package com.ccloomi.dsengine.analyze;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Iterator;
+import java.util.Map;
 
 import com.ccloomi.dsengine.util.StringUtil;
 
@@ -16,36 +16,37 @@ public abstract class BaseAnalyze implements IndexAnalyze{
 
 	@Override
 	public String[] analyze(Object data) {
-		char[]chars=null;
-		if(data instanceof String) {
-			chars=((String)data).toCharArray();
-		}else {
-			chars=String.valueOf(data).toCharArray();
-		}
-		int length=chars.length;
-		Set<String>cset=new HashSet<>(length);
-		for(int i=0;i<length;i++){
-			cset.add(Integer.toHexString((int)chars[i]));
-		}
-		return cset.toArray(new String[cset.size()]);
+		Map<String, ?>cmap=value2Map(data);
+		return cmap.keySet().toArray(new String[cmap.size()]);
 	}
-
+	protected abstract Map<String, ?> value2Map(Object value);
+	@Override
+	public String[][] difference(Object od, Object nw) {
+		Map<String, ?>omap=value2Map(od);
+		Map<String, ?>nmap=value2Map(nw);
+		Iterator<String>it=omap.keySet().iterator();
+		while(it.hasNext()) {
+			String k=it.next();
+			if(nmap.containsKey(k)) {
+				it.remove();
+				nmap.remove(k);
+			}
+		}
+		return new String[][] {
+			omap.keySet().toArray(new String[omap.size()]),
+			nmap.keySet().toArray(new String[nmap.size()])};
+	}
 	@Override
 	public String analyzeEL(String el) {
-		char[]chars=el.toCharArray();
-		int length=chars.length;
-		Set<String>cset=new HashSet<>(length);
-		for(int i=0;i<length;i++){
-			cset.add(Integer.toHexString((int)chars[i]));
-		}
-		if(cset.contains("2d")){// - 的HexString
-			cset.remove("2d");
+		Map<String, ?>cmap=value2Map(el);
+		if(cmap.containsKey("2d")){// - 的HexString
+			cmap.remove("2d");
 			return StringUtil
-					.joinCollection("&-", cset)
+					.joinCollection("&-", cmap.keySet())
 					.insert(0, "-")
 					.toString();
 		}else{
-			return StringUtil.joinCollectionString("&", cset);
+			return StringUtil.joinCollectionString("&", cmap.keySet());
 		}
 	}
 }

@@ -1,6 +1,5 @@
 package com.ccloomi.dsengine.linkthread;
 
-import com.ccloomi.dsengine.Schema;
 import com.ccloomi.dsengine.query.Query;
 
 /**@类名 BaseLinkedThread
@@ -10,7 +9,6 @@ import com.ccloomi.dsengine.query.Query;
  * @日期 2017年1月11日-上午10:36:11
  */
 public abstract class BaseLinkedThread<DT, RT> extends CCLinkedThread<DT, RT>{
-	protected Schema schema;
 	protected Query query;
 	public void freeResources() {
 		

@@ -39,21 +39,27 @@ public class EngineTest {
 //			engine.addDocuments(doc);
 //		}
 //		engine.flush2disk();
-		Scanner sc=new Scanner(System.in);
-		while(true) {
-			String queryStr=sc.nextLine();
-			if(!"exit".equalsIgnoreCase(queryStr)){
-				if(!"".equals(queryStr)){
-					ResultBean result=engine.doQuery("t_info", QueryParser.parser(schema, queryStr));
-					System.out.println(result);
-				}else{
-					ResultBean result=engine.doQuery("t_info", QueryParser.parser(schema, "{info:'东 蜀山'}"));
-					System.out.println(result);
-				}
-			}else{
-				break;
-			}
-		}
-		sc.close();
+//		
+//		Scanner sc=new Scanner(System.in);
+//		while(true) {
+//			String queryStr=sc.nextLine();
+//			if(!"exit".equalsIgnoreCase(queryStr)){
+//				if(!"".equals(queryStr)){
+//					ResultBean result=engine.doQuery("t_info", QueryParser.parser(schema, queryStr));
+//					System.out.println(result);
+//				}else{
+//					ResultBean result=engine.doQuery("t_info", QueryParser.parser(schema, "{info:'东 蜀山'}"));
+//					System.out.println(result);
+//				}
+//			}else{
+//				break;
+//			}
+//		}
+//		sc.close();
+		
+		Map<String, String>doc=new HashMap<>();
+		doc.put("id", "9f7e0c48a1c47dbabeee75df9a9b887f");
+		doc.put("info", "东方不败");
+		engine.updateDocument(doc);
 	}
 }

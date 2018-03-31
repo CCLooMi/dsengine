@@ -20,6 +20,15 @@ public interface IndexAnalyze extends Serializable{
 	 */
 	public String[] analyze(Object data);
 	/**
+	 * 描述：计算两个值分词后的差异，更新文档时需要
+	 * 作者：chenxj
+	 * 日期：2018年3月31日 - 下午8:15:22
+	 * @param od 老的值
+	 * @param nw 新的值
+	 * @return diff[0] 需要删除的keys，diff[1] 需要增加的keys
+	 */
+	public String[][] difference(Object od,Object nw);
+	/**
 	 * @名称 analyzeEL
 	 * @说明	用来分析转换查询语句
 	 * @作者 Chenxj

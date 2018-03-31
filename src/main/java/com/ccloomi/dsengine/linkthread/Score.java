@@ -1,6 +1,5 @@
 package com.ccloomi.dsengine.linkthread;
 
-import com.ccloomi.dsengine.Schema;
 import com.ccloomi.dsengine.bean.FieldKS;
 import com.ccloomi.dsengine.bean.MapBean;
 
@@ -11,9 +10,8 @@ import com.ccloomi.dsengine.bean.MapBean;
  * @日期 2017年1月16日-下午1:52:03
  */
 public class Score  extends BaseLinkedThread<MapBean, MapBean>{
-	public Score(Schema schema){
+	public Score(){
 		this.setName("LinkThread_B-Document Score");
-		this.schema=schema;
 	}
 	@Override
 	public MapBean processData(MapBean t) {

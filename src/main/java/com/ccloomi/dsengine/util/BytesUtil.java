@@ -1,5 +1,7 @@
 package com.ccloomi.dsengine.util;
 
+import static com.ccloomi.dsengine.EngineConfigure.searchReadBufferSize;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
@@ -221,4 +223,88 @@ public class BytesUtil {
 		return null;
 	}
 	
+	/**
+	 * 描述：两个字节数组相与运算
+	 * 作者：chenxj
+	 * 日期：2018年3月31日 - 下午5:19:36
+	 * @param a
+	 * @param b
+	 * @return
+	 */
+	public static short aANDb(byte[]a,byte[]b){
+		int x0=0;
+		int x1=0;
+		for(int i=0;i<searchReadBufferSize;i++){
+			if(a[i]==0){
+				x0++;
+			}else if(a[i]==-1){
+				a[i]=b[i];
+				x1++;
+			}else if(a[i]!=b[i]){
+				a[i]&=b[i];
+			}
+		}
+		if(x0==searchReadBufferSize){
+			return 0;
+		}else if(x1==searchReadBufferSize){
+			return 1;
+		}else {
+			return -1;
+		}
+	}
+	/**
+	 * 描述：两个字节数组相或运算
+	 * 作者：chenxj
+	 * 日期：2018年3月31日 - 下午5:20:03
+	 * @param a
+	 * @param b
+	 * @return
+	 */
+	public static short aORb(byte[]a,byte[]b){
+		int x0=0;
+		int x1=0;
+		for(int i=0;i<searchReadBufferSize;i++){
+			if(a[i]==0){
+				a[i]=b[i];
+				x0++;
+			}else if(a[i]==-1){
+				x1++;
+			}else if(a[i]!=b[i]){
+				a[i]|=b[i];
+			}
+		}
+		if(x0==searchReadBufferSize){
+			return 0;
+		}else if(x1==searchReadBufferSize){
+			return 1;
+		}else {
+			return -1;
+		}
+	}
+	/**
+	 * 描述：反转byte[]
+	 * 作者：chenxj
+	 * 日期：2018年3月31日 - 上午9:58:54
+	 * @param a
+	 * @return
+	 */
+	public static short revers(byte[]a){
+		int x0=0;
+		int x1=0;
+		for(int i=0;i<searchReadBufferSize;i++){
+			a[i]=(byte) ~a[i];
+			if(a[i]==0){
+				x0++;
+			}else if(a[i]==-1){
+				x1++;
+			}
+		}
+		if(x0==searchReadBufferSize){
+			return 0;
+		}else if(x1==searchReadBufferSize){
+			return 1;
+		}else {
+			return -1;
+		}
+	}
 }
