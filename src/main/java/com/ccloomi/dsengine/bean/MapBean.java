@@ -19,6 +19,10 @@ public class MapBean {
 		this.attrMap=new HashMap<>();
 		this.scoreMap=new HashMap<>();
 	}
+	public void clear() {
+		this.attrMap.clear();
+		this.scoreMap.clear();
+	}
 	public boolean hasAttr(String attrName) {
 		return attrMap.containsKey(attrName);
 	}

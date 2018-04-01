@@ -44,7 +44,11 @@ public class DataAccess {
 	protected Schema schema;
 	protected Map<Long, MappedByteBuffer>fileMBB;
 	protected Map<Integer, RandomAccessFile>rafMap;
+	/**ReadOnly*/
+	protected Map<Integer, RandomAccessFile>rrafMap;
 	protected Map<Integer, RocksDB>rdbMap;
+	/**ReadOnly*/
+	protected Map<Integer, RocksDB>rrdbMap;
 	
 	public DataAccess(String dpath,Schema schema) {
 		this.mbpool=new MapBeanPool();
@@ -53,7 +57,9 @@ public class DataAccess {
 		this.schema=schema;
 		this.fileMBB=new HashMap<>();
 		this.rafMap=new HashMap<>();
+		this.rrafMap=new HashMap<>();
 		this.rdbMap=new HashMap<>();
+		this.rrdbMap=new HashMap<>();
 	}
 	public MapBean getMapBean() {
 		return mbpool.get();
@@ -61,7 +67,7 @@ public class DataAccess {
 	public void recycMapBean(MapBean mb) {
 		mbpool.recyc(mb);
 	}
-	public boolean updateDocument(Object id,Map<String, ? extends Object>doc) {
+	public void updateDocument(Object id,Map<String, ? extends Object>doc) {
 		byte[]did=null;
 		try {
 			if(id instanceof byte[]) {
@@ -71,22 +77,93 @@ public class DataAccess {
 			}
 			RocksDB rdb=getIdRocksDbReadOnly();
 			long docId=BytesUtil.readBytesToLong(rdb.get(did), -1);
-			//TODO
 			MapBean mb=mbpool.get();
 			for(Entry<String, ? extends Object>entry:doc.entrySet()) {
 				SchemaField field=schema.getSchemaField(entry.getKey());
 				if(field!=null) {
 					readFieldData(mb, field, docId);
-				}else {
-					doc.remove(entry.getKey());
+					updateIndex(docId, field, field
+							.getAnalyze()
+							.difference(mb.getAttr(entry.getKey()),entry.getValue()));
+					//修改field数据
+					writeFieldData(docId, field, entry.getValue());
 				}
 			}
-			System.out.println("old:\t"+mb);
-			System.out.println("new:\t"+doc);
+			mbpool.recyc(mb);
 		}catch (Exception e) {
 			e.printStackTrace();
 		}
-		return false;
+	}
+	/**
+	 * 描述：更新索引
+	 * 作者：chenxj
+	 * 日期：2018年4月1日 - 下午6:13:48
+	 * @param docId
+	 * @param field
+	 * @param change
+	 */
+	private void updateIndex(long docId,SchemaField field,String[][]change) {
+		if(change[0].length>0||change[1].length>0) {
+			String filePath=Paths.get(dpath, schema.getName(),field.getName()).toString();
+			long position=docId>>3;
+			int offset=(int)docId%8;
+			String fpath;
+			RandomAccessFile raf;
+			FileChannel fc;
+			ByteBuffer bb=ByteBuffer.allocate(1);
+			//处理删除
+			String[]del=change[0];
+			for(int i=0;i<del.length;i++) {
+				fpath=StringUtil.getHashPathFile(filePath,del[i],true);
+				raf=getRandomAccessFile(new File(fpath));
+				fc=raf.getChannel();
+				bb.clear();
+				try {
+					fc.position(position);
+					fc.read(bb);
+					bb.flip();
+					byte bt=0;
+					if(bb.limit()>0) {
+						bt=bb.get();
+					}
+					bt&=~(0b10000000>>>offset);
+					bb.clear();
+					bb.put(bt);
+					bb.flip();
+					fc.write(bb, position);
+					fc.close();
+					raf.close();
+				}catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			//处理增加
+			String[]add=change[1];
+			for(int i=0;i<add.length;i++) {
+				fpath=StringUtil.getHashPathFile(filePath,add[i],true);
+				raf=getRandomAccessFile(new File(fpath));
+				fc=raf.getChannel();
+				bb.clear();
+				try {
+					fc.position(position);
+					fc.read(bb);
+					bb.flip();
+					byte bt=0;
+					if(bb.limit()>0) {
+						bt=bb.get();
+					}
+					bt|=(0b10000000>>>offset);
+					bb.clear();
+					bb.put(bt);
+					bb.flip();
+					fc.write(bb, position);
+					fc.close();
+					raf.close();
+				}catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
 	}
 	public void writeFieldData(long docId,SchemaField sfield,Object value) {
 		byte[]id=BytesUtil.longToBytes(docId,8,-1);
@@ -273,14 +350,15 @@ public class DataAccess {
 	 * 日期：2018年3月31日 - 上午9:52:50
 	 * @param mbean 存储到MapBean中
 	 * @param field 读取的Field对象
-	 * @param position 即文档ID
+	 * @param docId 文档ID
 	 */
-	private void readFieldData(MapBean mbean,SchemaField field,long position) {
+	private void readFieldData(MapBean mbean,SchemaField field,long docId) {
 		try {
 			if(field.getLength()>0) {
 				MappedByteBuffer mbb=null;
-				int p=(int)(position/field.getMappedMax());
-				int ps=(int)((position*field.getLength())%field.getMappedMax());
+				long fs=docId*field.getLength();
+				int p=(int)(fs/field.getMappedMax());
+				int ps=(int)(fs%field.getMappedMax());
 				//使用数字作为key来提高性能
 				Long key=new Long(field.hashCode()|p);
 				if(fileMBB.containsKey(key)) {
@@ -303,7 +381,7 @@ public class DataAccess {
 				mbean.setAttr(field.getName(), field.transformValue());
 			}else if(field.getLength()<0) {
 				RocksDB rdb=getDataReader(field);
-				byte[]bytes=rdb.get(BytesUtil.longToBytes(position, 8, -1));
+				byte[]bytes=rdb.get(BytesUtil.longToBytes(docId, 8, -1));
 				if(field.isScoreable()) {
 					ByteBuffer mbb=MappedByteBuffer.allocate(bytes.length);
 					mbb.put(bytes);
@@ -393,14 +471,14 @@ public class DataAccess {
 			if(fileMBB.containsKey(key)){
 				mbb=fileMBB.get(key);
 			}else{
-				raf=new RandomAccessFile(fpath, "r");
+				raf=new RandomAccessFile(fpath, "rw");
 				FileChannel fc=raf.getChannel();
 				long fsize=fc.size();
 				long pmax=p*Integer.MAX_VALUE;
 				if(pmax+Integer.MAX_VALUE>fsize){
-					mbb=fc.map(FileChannel.MapMode.READ_ONLY, pmax, fsize-pmax);
+					mbb=fc.map(FileChannel.MapMode.READ_WRITE, pmax, fsize-pmax);
 				}else{
-					mbb=fc.map(FileChannel.MapMode.READ_ONLY, pmax, Integer.MAX_VALUE);
+					mbb=fc.map(FileChannel.MapMode.READ_WRITE, pmax, Integer.MAX_VALUE);
 				}
 				fileMBB.put(key, mbb);
 			}
@@ -409,11 +487,11 @@ public class DataAccess {
 	}
 	private RocksDB getIdRocksDbReadOnly() {
 		SchemaField field=schema.getSchemaField("id");
-		if(rdbMap.containsKey(field.hashCode())) {
-			return rdbMap.get(field.hashCode());
+		if(rrdbMap.containsKey(field.hashCode())) {
+			return rrdbMap.get(field.hashCode());
 		}else {
 			RocksDB rdb=getRocksDBReadOnly(Paths.get(dpath, schema.getName(),field.getName()).toFile());
-			rdbMap.put(field.hashCode(), rdb);
+			rrdbMap.put(field.hashCode(), rdb);
 			return rdb;
 		}
 	}
@@ -438,23 +516,23 @@ public class DataAccess {
 	@SuppressWarnings("unchecked")
 	private <T>T getDataReader(SchemaField field){
 		if(field.getLength()>0) {
-			if(rafMap.containsKey(field.hashCode())) {
-				return (T)rafMap.get(field.hashCode());
+			if(rrafMap.containsKey(field.hashCode())) {
+				return (T)rrafMap.get(field.hashCode());
 			}else {
 				File dir=Paths.get(dpath, schema.getName(),field.getName()).toFile();
 				if(!dir.exists()) {
 					dir.mkdirs();
 				}
 				RandomAccessFile raf=getRandomAccessFileReadOnly(Paths.get(dir.getAbsolutePath(),field.getName()).toFile());
-				rafMap.put(field.hashCode(), raf);
+				rrafMap.put(field.hashCode(), raf);
 				return (T)raf;
 			}
 		}else if(field.getLength()<0) {
-			if(rdbMap.containsKey(field.hashCode())) {
-				return (T)rdbMap.get(field.hashCode());
+			if(rrdbMap.containsKey(field.hashCode())) {
+				return (T)rrdbMap.get(field.hashCode());
 			}else {
 				RocksDB rdb=getRocksDBReadOnly(Paths.get(dpath, schema.getName(),field.getName()).toFile());
-				rdbMap.put(field.hashCode(), rdb);
+				rrdbMap.put(field.hashCode(), rdb);
 				return (T)rdb;
 			}
 		}
