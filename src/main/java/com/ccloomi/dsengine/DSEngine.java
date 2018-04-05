@@ -3,6 +3,7 @@ package com.ccloomi.dsengine;
 import static com.ccloomi.dsengine.EngineConfigure.searchMaxRate;
 import static com.ccloomi.dsengine.EngineConfigure.searchReadBufferSize;
 
+import java.nio.file.Paths;
 import java.util.Map;
 
 import com.ccloomi.dsengine.bean.IndexStatus;
@@ -19,28 +20,34 @@ import com.ccloomi.dsengine.query.Query;
  */
 public class DSEngine {
 	private String dPath;
-	private StringBuilder dataPath;
 	private IndexReader indexReader;
 	private IndexWriter indexWriter;
 	private SchemaReader schemaReader;
 	private DataAccess da;
-	
-	private long indexFileLength;
-	private long totalDocs;
+	private IndexStatus indexStatus;
+	private String schemaPath;
 	
 	public DSEngine(String dp) {
 		dPath=dp;
-		dataPath=new StringBuilder(dp);
 		indexReader=new IndexReader();
 		indexWriter=new IndexWriter();
 	}
-	public void updateDocument(Map<String, ? extends Object>doc) {
+	public DSEngine updateDocument(Map<String, ? extends Object>doc) {
 		Object id=doc.remove("id");
 		if(id instanceof String) {
 			da.updateDocumentById((String)id, doc);
 		}else if(id instanceof byte[]) {
 			da.updateDocumentById((byte[])id, doc);
 		}
+		return this;
+	}
+	public DSEngine updateDocumentByDocId(Object docId,Map<String, ? extends Object>doc) {
+		if(docId instanceof Long) {
+			da.updateDocumentByDocId((long)docId, doc);
+		}else if(docId instanceof byte[]) {
+			da.updateDocumentByDocId((byte[])docId, doc);
+		}
+		return this;
 	}
 	public ResultBean doQuery(String schemaName,Query query) {
 		this.schemaReader.setQuery(query);
@@ -48,8 +55,10 @@ public class DSEngine {
 		byte[]result=new byte[searchReadBufferSize];;
 		long countDocs=0;
 		long t1=System.currentTimeMillis();
+		long indexFileLength=indexStatus.indexFileLength();
+		long totalDocs=indexStatus.totalDocs();
 		query:for(long i=0;i<indexFileLength;i+=searchReadBufferSize){
-			indexReader.calculate(getSchemaPath(schemaName), query, i, result);
+			indexReader.calculate(schemaPath, query, i, result);
 			//根据result获取文档ID并异步进行查找
 			int rl=result.length;
 			int count=0;
@@ -91,32 +100,50 @@ public class DSEngine {
 		
 		return resultBean;
 	}
-	public DSEngine setSchema(Schema schema) {
-		this.da=new DataAccess(dPath,schema);
-		this.indexWriter.setSchema(schema);
-		this.indexWriter.setDataAccess(da);
-		this.schemaReader=new SchemaReader(da);
-		this.indexReader.setDataAccess(da);
-		schemaPosition();
-		return this;
-	}
 	@SuppressWarnings("unchecked")
 	public DSEngine addDocuments(Map<String,? extends Object>...docs) {
 		indexWriter.addDocuments(dPath, docs);
 		return this;
 	}
+	@SuppressWarnings("unchecked")
+	public DSEngine addAndUpdateDocuments(Map<String, ? extends Object>...docs) {
+		indexWriter.addAndUpdateDocuments(dPath, docs);
+		return this;
+	}
+	public DSEngine deleteDocumentById(String id) {
+		da.deleteDocumentById(id);
+		return this;
+	}
+	public DSEngine deleteDocumentById(byte[] id) {
+		da.deleteDocumentById(id);
+		return this;
+	}
+	public DSEngine deleteDocumentByDocId(long docId) {
+		da.deleteDocumentByDocId(docId);
+		return this;
+	}
+	public DSEngine deleteDocumentByDocId(byte[] docId) {
+		da.deleteDocumentByDocId(docId);
+		return this;
+	}
+	public DSEngine setSchema(Schema schema) {
+		this.schemaPath=Paths.get(dPath, schema.getName()).toString();
+		this.da=new DataAccess(dPath,schema);
+		this.indexWriter.setSchema(schema);
+		this.indexWriter.setDataAccess(da);
+		this.schemaReader=new SchemaReader(da);
+		this.indexReader.setDataAccess(da);
+		this.indexStatus=da.getIndexStatus();
+		return this;
+	}
+	/**
+	 * 描述：添加了文档之后一定要先存储到磁盘，不然后面的删除修改等操作会导致索引错误
+	 * 作者：chenxj
+	 * 日期：2018年4月5日 - 下午8:25:03
+	 * @return
+	 */
 	public DSEngine flush2disk() {
 		indexWriter.forceWriteToDisk(dPath);
 		return this;
-	}
-	private void schemaPosition() {
-		IndexStatus status=da.getIndexStatus();
-		this.indexFileLength=status.indexFileLength();
-		this.totalDocs=status.totalDocs();
-	}
-	private String getSchemaPath(String schemaName) {
-		dataPath.delete(dPath.length(), dataPath.length());
-		dataPath.append('/').append(schemaName);
-		return dataPath.toString();
 	}
 }

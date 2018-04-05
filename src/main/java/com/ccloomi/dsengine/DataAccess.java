@@ -622,16 +622,16 @@ public class DataAccess {
 			return rdb;
 		}
 	}
-	private RocksDB getIdRocksDb() {
-		SchemaField field=schema.getSchemaField("id");
-		if(rdbMap.containsKey(field.hashCode())) {
-			return rdbMap.get(field.hashCode());
-		}else {
-			RocksDB rdb=getRocksDB(Paths.get(dpath, schema.getName(),field.getName()).toFile());
-			rdbMap.put(field.hashCode(), rdb);
-			return rdb;
-		}
-	}
+//	private RocksDB getIdRocksDb() {
+//		SchemaField field=schema.getSchemaField("id");
+//		if(rdbMap.containsKey(field.hashCode())) {
+//			return rdbMap.get(field.hashCode());
+//		}else {
+//			RocksDB rdb=getRocksDB(Paths.get(dpath, schema.getName(),field.getName()).toFile());
+//			rdbMap.put(field.hashCode(), rdb);
+//			return rdb;
+//		}
+//	}
 	/**
 	 * 描述：获取Field文件读取对象
 	 * 作者：chenxj
