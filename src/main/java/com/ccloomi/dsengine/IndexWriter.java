@@ -36,11 +36,26 @@ public class IndexWriter {
 	
 	public IndexWriter() {
 		this.k2lMap=new HashMap<>();
-		this.result=new HashMap<>();
 	}
 	
 	public IndexWriter setSchema(Schema schema) {
 		this.schema=schema;
+		return this;
+	}
+	@SuppressWarnings("unchecked")
+	public IndexWriter addAndUpdateDocuments(String dataPath,Map<String,? extends Object>...docs) {
+		for(int i=0;i<docs.length;i++) {
+			addAndUpdateDocument(dataPath, docs[i]);
+		}
+		return this;
+	}
+	public IndexWriter addAndUpdateDocument(String dataPath,Map<String, ? extends Object>doc) {
+		if(da.hasDeletedDocId()) {
+			long docId=da.getDeletedDocId();
+			da.updateDocumentByDocId(docId, doc);
+		}else {
+			addDocument(dataPath, doc);
+		}
 		return this;
 	}
 	@SuppressWarnings("unchecked")
@@ -105,7 +120,6 @@ public class IndexWriter {
 			for(Entry<String, Long>entry:result.entrySet()){
 				long[]bs=k2lMap.get(entry.getKey());
 				bs[dataLength]=entry.getValue();
-				result.put(entry.getKey(), 0l);
 			}
 			for(Entry<String, long[]>entry:k2lMap.entrySet()){
 				String[]d=entry.getKey().split("-");
@@ -114,28 +128,26 @@ public class IndexWriter {
 				da.writeFileWithBuffer(path, position, data, dataLength+1);
 			}
 			position+=dataLength<<3;
-			da.saveIndexStatus(new IndexStatus(position, offset, result));
-			result.clear();
+			da.saveIndexStatus(position, offset, result);
 			k2lMap.clear();
 			dataLength=0;
 		}else{
 			writeToDisk(dataPath);
 		}
 	}
-	public void loadStatus() {
-		IndexStatus status=da.loadIndexStatus();
+	public void setDataAccess(DataAccess da) {
+		this.da = da;
+		IndexStatus status=da.getIndexStatus();
 		this.position=status.getPosition();
 		this.offset=status.getOffset();
 		this.result=status.getKlMap();
+		//预先创建好已有关键字的long数组
 		if(this.offset<63) {
 			for(Entry<String, Long>entry:result.entrySet()){
 				//*1024 equals <<10
 				k2lMap.put(entry.getKey(), new long[bufSize<<10]);
 			}
 		}
-	}
-	public void setDataAccess(DataAccess da) {
-		this.da = da;
 	}
 	
 }

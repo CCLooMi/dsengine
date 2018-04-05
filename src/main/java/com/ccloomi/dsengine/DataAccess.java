@@ -38,6 +38,7 @@ import com.ccloomi.dsengine.util.UUID;
  * 日    期：2018年3月31日-上午8:46:35
  */
 public class DataAccess {
+	private IndexStatus indexStatus;
 	private MapBeanPool mbpool;
 	
 	protected String dpath;
@@ -60,6 +61,7 @@ public class DataAccess {
 		this.rrafMap=new HashMap<>();
 		this.rdbMap=new HashMap<>();
 		this.rrdbMap=new HashMap<>();
+		this.indexStatus=loadIndexStatus();
 	}
 	public MapBean getMapBean() {
 		return mbpool.get();
@@ -67,17 +69,124 @@ public class DataAccess {
 	public void recycMapBean(MapBean mb) {
 		mbpool.recyc(mb);
 	}
-	public void updateDocument(Object id,Map<String, ? extends Object>doc) {
-		byte[]did=null;
+	public boolean hasDeletedDocId() {
+		return this.indexStatus.hashDeletedDocId();
+	}
+	public long getDeletedDocId() {
+		return this.indexStatus.getDeletedDocId();
+	}
+	/**
+	 * 描述：根据文档Id删除文档
+	 * 作者：chenxj
+	 * 日期：2018年4月5日 - 上午9:36:57
+	 * @param id
+	 */
+	public void deleteDocumentById(String id) {
+		deleteDocumentById(UUID.fromString(id));
+	}
+	/**
+	 * 描述：根据文档Id删除文档
+	 * 作者：chenxj
+	 * 日期：2018年4月5日 - 上午9:11:28
+	 * @param id
+	 */
+	public void deleteDocumentById(byte[] id) {
+		RocksDB rdb=getIdRocksDbReadOnly();
 		try {
-			if(id instanceof byte[]) {
-				did=(byte[])id;
-			}else {
-				did=UUID.fromString((String)id);
+			deleteDocumentByDocId(rdb.get(id));
+		}catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	/**
+	 * 描述：根据docId删除文档
+	 * 作者：chenxj
+	 * 日期：2018年4月5日 - 上午9:35:12
+	 * @param docId
+	 */
+	public void deleteDocumentByDocId(byte[] docId) {
+		deleteDocumentByDocId(BytesUtil.readBytesToLong(docId, -1));
+	}
+	/**
+	 * 描述：根据docId删除文档
+	 * 作者：chenxj
+	 * 日期：2018年4月5日 - 上午9:11:34
+	 * @param docId
+	 */
+	public void deleteDocumentByDocId(long docId) {
+		MapBean mb=getMapBean();
+		SchemaField[] fields=schema.getFieldsArray();
+		for(int i=0;i<fields.length;i++) {
+			readFieldData(mb, fields[i], docId);
+			updateIndex(docId, fields[i], fields[i]
+					.getAnalyze()
+					.difference(mb.getAttr(fields[i].getName()),""));
+		}
+		recycMapBean(mb);
+		this.indexStatus.addDeletedDocIds(docId);
+	}
+	/**
+	 * 描述：根据docId更新文档
+	 * 作者：chenxj
+	 * 日期：2018年4月5日 - 上午9:30:26
+	 * @param docId
+	 * @param doc
+	 */
+	public void updateDocumentByDocId(byte[] docId,Map<String, ? extends Object>doc) {
+		updateDocumentByDocId(BytesUtil.readBytesToLong(docId, -1), doc);
+	}
+	/**
+	 * 描述：根据docId更新文档
+	 * 作者：chenxj
+	 * 日期：2018年4月5日 - 上午9:12:30
+	 * @param id
+	 * @param doc
+	 */
+	public void updateDocumentByDocId(long docId,Map<String, ? extends Object>doc) {
+		try {
+			MapBean mb=getMapBean();
+			for(Entry<String, ? extends Object>entry:doc.entrySet()) {
+				SchemaField field=schema.getSchemaField(entry.getKey());
+				if(field!=null) {
+					//index update may not needed.
+					if(field.isIndexable()) {
+						readFieldData(mb, field, docId);
+						updateIndex(docId, field, field
+								.getAnalyze()
+								.difference(mb.getAttr(entry.getKey()),entry.getValue()));
+					}
+					//修改field数据
+					writeFieldData(docId, field, entry.getValue());
+				}
 			}
+			recycMapBean(mb);
+		}catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	/**
+	 * 描述：根据文档ID更新文档
+	 * 作者：chenxj
+	 * 日期：2018年4月5日 - 上午9:32:28
+	 * @param id
+	 * @param doc
+	 */
+	public void updateDocumentById(String id,Map<String, ? extends Object>doc) {
+		updateDocumentById(UUID.fromString(id), doc);
+	}
+	/**
+	 * 描述：根据文档ID更新文档
+	 * 作者：chenxj
+	 * 日期：2018年4月5日 - 上午9:09:35
+	 * @param id 文档ID
+	 * @param doc 文档
+	 */
+	public void updateDocumentById(byte[] id,Map<String, ? extends Object>doc) {
+		if(id==null)return;
+		try {
 			RocksDB rdb=getIdRocksDbReadOnly();
-			long docId=BytesUtil.readBytesToLong(rdb.get(did), -1);
-			MapBean mb=mbpool.get();
+			long docId=BytesUtil.readBytesToLong(rdb.get(id), -1);
+			MapBean mb=getMapBean();
 			for(Entry<String, ? extends Object>entry:doc.entrySet()) {
 				SchemaField field=schema.getSchemaField(entry.getKey());
 				if(field!=null) {
@@ -89,7 +198,7 @@ public class DataAccess {
 					writeFieldData(docId, field, entry.getValue());
 				}
 			}
-			mbpool.recyc(mb);
+			recycMapBean(mb);
 		}catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -104,6 +213,9 @@ public class DataAccess {
 	 */
 	private void updateIndex(long docId,SchemaField field,String[][]change) {
 		if(change[0].length>0||change[1].length>0) {
+			//TODO not test
+			this.indexStatus.updateIndex(change, docId);
+			
 			String filePath=Paths.get(dpath, schema.getName(),field.getName()).toString();
 			long position=docId>>3;
 			int offset=(int)docId%8;
@@ -227,6 +339,15 @@ public class DataAccess {
 			e.printStackTrace();
 		}
 	}
+	/**
+	 * 描述：写入索引数据
+	 * 作者：chenxj
+	 * 日期：2018年4月5日 - 下午2:06:18
+	 * @param fileName 索引文件名
+	 * @param position 文件位置
+	 * @param data 存储数据的数组
+	 * @param dataLength 数据长度
+	 */
 	public void writeFileWithBuffer(String fileName,long position,long[]data,int dataLength){
 		RandomAccessFile raf = null;
 		int bufSize=1024*256;
@@ -272,7 +393,7 @@ public class DataAccess {
 	 * @return
 	 */
 	public MapBean readDocumentFieldDataInQuery(Query query,Long docId) {
-		MapBean mb=mbpool.get();
+		MapBean mb=getMapBean();
 		for(String fieldName:query.getMtree().keySet()) {
 			SchemaField field=schema.getSchemaField(fieldName);
 			if(field!=null) {
@@ -305,21 +426,26 @@ public class DataAccess {
 	 * @作者 Chenxj
 	 * @邮箱 chenios@foxmail.com
 	 * @日期 2016年12月29日-下午5:25:06
-	 * @param status
 	 */
-	public void saveIndexStatus(IndexStatus status) {
+	public void saveIndexStatus(long position,int offset,Map<String, Long>klMap) {
+		this.indexStatus.setPosition(position);
+		this.indexStatus.setOffset(offset);
+		this.indexStatus.setKlMap(klMap);
 		ObjectOutputStream objOut=null;
 		try {
 			FileOutputStream fOut = new FileOutputStream(Paths
 					.get(dpath, schema.getName(),".status")
 					.toFile());
 			objOut=new ObjectOutputStream(fOut);
-			objOut.writeObject(status);
+			objOut.writeObject(indexStatus);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}finally {
 			try {objOut.close();} catch (IOException e) {};
 		}
+	}
+	public IndexStatus getIndexStatus() {
+		return this.indexStatus;
 	}
 	/**
 	 * @名称 loadIndexStatus
@@ -328,7 +454,8 @@ public class DataAccess {
 	 * @邮箱 chenios@foxmail.com
 	 * @日期 2016年12月29日-下午5:34:02
 	 */
-	public IndexStatus loadIndexStatus() {
+	private IndexStatus loadIndexStatus() {
+		//需要恢复已删除docId
 		File file=Paths.get(dpath, schema.getName(),".status").toFile();
 		if(file.exists()){
 			ObjectInputStream objIn=null;

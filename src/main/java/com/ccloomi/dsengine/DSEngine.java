@@ -35,8 +35,12 @@ public class DSEngine {
 		indexWriter=new IndexWriter();
 	}
 	public void updateDocument(Map<String, ? extends Object>doc) {
-		//TODO
-		da.updateDocument(doc.remove("id"), doc);
+		Object id=doc.remove("id");
+		if(id instanceof String) {
+			da.updateDocumentById((String)id, doc);
+		}else if(id instanceof byte[]) {
+			da.updateDocumentById((byte[])id, doc);
+		}
 	}
 	public ResultBean doQuery(String schemaName,Query query) {
 		this.schemaReader.setQuery(query);
@@ -106,7 +110,7 @@ public class DSEngine {
 		return this;
 	}
 	private void schemaPosition() {
-		IndexStatus status=da.loadIndexStatus();
+		IndexStatus status=da.getIndexStatus();
 		this.indexFileLength=status.indexFileLength();
 		this.totalDocs=status.totalDocs();
 	}

@@ -31,35 +31,35 @@ public class EngineTest {
 		DSEngine engine=new DSEngine(dpath);
 		engine.setSchema(schema);
 		
-//		String[]docs=new String[] {"河东狮吼河东狮吼","东西方不败","东成西就","言叶之庭日本","蜀山传张柏芝"};
-//		for(int i=0;i<docs.length;i++) {
-//			Map<String, Object>doc=new HashMap<>();
-//			if("东西方不败".equals(docs[i])) {
-//				doc.put("id", UUID.fromString("465a2d8d77ecb402caec1b9b9fc1cdd1"));
-//			}else {
-//				doc.put("id", UUID.randomUUID());
-//			}
-//			doc.put("info", docs[i]);
-//			engine.addDocuments(doc);
-//		}
-//		engine.flush2disk();
-		
-		Scanner sc=new Scanner(System.in);
-		while(true) {
-			String queryStr=sc.nextLine();
-			if(!"exit".equalsIgnoreCase(queryStr)){
-				if(!"".equals(queryStr)){
-					ResultBean result=engine.doQuery("t_info", QueryParser.parser(schema, queryStr));
-					System.out.println(result);
-				}else{
-					ResultBean result=engine.doQuery("t_info", QueryParser.parser(schema, "{info:'东 蜀山'}"));
-					System.out.println(result);
-				}
-			}else{
-				break;
+		String[]docs=new String[] {"河东狮吼河东狮吼","东西方不败","东成西就","言叶之庭日本","蜀山传张柏芝"};
+		for(int i=0;i<docs.length;i++) {
+			Map<String, Object>doc=new HashMap<>();
+			if("东西方不败".equals(docs[i])) {
+				doc.put("id", UUID.fromString("465a2d8d77ecb402caec1b9b9fc1cdd1"));
+			}else {
+				doc.put("id", UUID.randomUUID());
 			}
+			doc.put("info", docs[i]);
+			engine.addDocuments(doc);
 		}
-		sc.close();
+		engine.flush2disk();
+		
+//		Scanner sc=new Scanner(System.in);
+//		while(true) {
+//			String queryStr=sc.nextLine();
+//			if(!"exit".equalsIgnoreCase(queryStr)){
+//				if(!"".equals(queryStr)){
+//					ResultBean result=engine.doQuery("t_info", QueryParser.parser(schema, queryStr));
+//					System.out.println(result);
+//				}else{
+//					ResultBean result=engine.doQuery("t_info", QueryParser.parser(schema, "{info:'东 蜀山'}"));
+//					System.out.println(result);
+//				}
+//			}else{
+//				break;
+//			}
+//		}
+//		sc.close();
 		
 //		Map<String, String>doc=new HashMap<>();
 //		doc.put("id", "465a2d8d77ecb402caec1b9b9fc1cdd1");
