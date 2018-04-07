@@ -29,70 +29,75 @@ public class QueryParser {
 	protected static JsonFactory jsonFactory=new JsonFactory()
 			.enable(Feature.ALLOW_UNQUOTED_FIELD_NAMES)
 			.enable(Feature.ALLOW_SINGLE_QUOTES);
+
 	
+	@SuppressWarnings("unchecked")
+	public static Query parser(Schema schema,String el) {
+		Map<String, String>m=new HashMap<>();
+		try {
+			JsonParser jp=jsonFactory.createParser(el);
+			m=objectMapper.readValue(jp, Map.class);
+		}catch (Exception e) {
+		}
+		return parser(schema, m);
+	}
 	/**
 	 * 根据schema解析查询表达式
 	 * @param schema
 	 * @param el
 	 * @return
 	 */
-	@SuppressWarnings("unchecked")
-	public static Query parser(Schema schema,String el){
+	public static Query parser(Schema schema,Map<String, String>qm){
 		//属性和对应关键字MAP
 		Map<String, String[]>fieldKSMap=new HashMap<>();
 		Map<String, QueryTree> mtree=new HashMap<>();
-		Map<String, String>m=new HashMap<>();
-		try {
-			JsonParser jp=jsonFactory.createParser(el);
-			m=objectMapper.readValue(jp, Map.class);
-			for(Entry<String, String>entry:m.entrySet()){
-				SchemaField field=schema.getSchemaField(entry.getKey());
-				if(field!=null){
-					String value=entry.getValue();
-					if(value==null||"".equals(value)){
-						continue;
-					}
-					
-					IndexAnalyze fieldAnalyze=field.getAnalyze();
-					String[]data=value.split(" +");
-					int datal=data.length;
-					
-					if(field.isScoreable()){
-						//用于匹配度打分
-						fieldKSMap.put(entry.getKey(), data);
-					}
-					StringBuilder sb=new StringBuilder();
-					List<String>ls=new ArrayList<>();
-					List<String>_ls=new ArrayList<>();
-					for(int i=0;i<datal;i++){
-						if(data[i].startsWith("-")){
-							_ls.add(fieldAnalyze.analyzeEL(data[i]));
-						}else{
-							ls.add(fieldAnalyze.analyzeEL(data[i]));
-						}
-					}
-					if(_ls.size()>0){
-						if(ls.size()>0){
-							if(ls.size()>1){
-								sb.append("{").append(StringUtil.joinCollection("|", ls)).append("}");
-							}else{
-								sb.append(ls.get(0));
-							}
-							sb.append("&");
-						}
-						if(_ls.size()>1){
-							sb.append("{").append(StringUtil.joinCollection("|", _ls)).append("}");
-						}else{
-							sb.append(_ls.get(0));
-						}
-					}else{
-						sb.append(StringUtil.joinCollection("|", ls));
-					}
-					entry.setValue(sb.toString());
-					mtree.put(entry.getKey(), transformELTree(entry.getKey(),transform(sb.toString())));
+		for(Entry<String, String>entry:qm.entrySet()){
+			SchemaField field=schema.getSchemaField(entry.getKey());
+			if(field!=null){
+				String value=entry.getValue();
+				if(value==null||"".equals(value)){
+					continue;
 				}
+				
+				IndexAnalyze fieldAnalyze=field.getAnalyze();
+				String[]data=value.split(" +");
+				int datal=data.length;
+				
+				if(field.isScoreable()){
+					//用于匹配度打分
+					fieldKSMap.put(entry.getKey(), data);
+				}
+				StringBuilder sb=new StringBuilder();
+				List<String>ls=new ArrayList<>();
+				List<String>_ls=new ArrayList<>();
+				for(int i=0;i<datal;i++){
+					if(data[i].startsWith("-")){
+						_ls.add(fieldAnalyze.analyzeEL(data[i]));
+					}else{
+						ls.add(fieldAnalyze.analyzeEL(data[i]));
+					}
+				}
+				if(_ls.size()>0){
+					if(ls.size()>0){
+						if(ls.size()>1){
+							sb.append("{").append(StringUtil.joinCollection("|", ls)).append("}");
+						}else{
+							sb.append(ls.get(0));
+						}
+						sb.append("&");
+					}
+					if(_ls.size()>1){
+						sb.append("{").append(StringUtil.joinCollection("|", _ls)).append("}");
+					}else{
+						sb.append(_ls.get(0));
+					}
+				}else{
+					sb.append(StringUtil.joinCollection("|", ls));
+				}
+				entry.setValue(sb.toString());
+				mtree.put(entry.getKey(), transformELTree(entry.getKey(),transform(sb.toString())));
 			}
-		}catch (Exception e) {}
+		}
 		return new FieldQuery(fieldKSMap, mtree);
 	}
 	

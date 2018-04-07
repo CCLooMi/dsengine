@@ -51,6 +51,9 @@ public class DSEngine {
 		}
 		return this;
 	}
+	public ResultBean search(Map<String, String>qm) {
+		return doQuery(QueryParser.parser(schema, qm));
+	}
 	public ResultBean search(String qStr) {
 		return doQuery(QueryParser.parser(schema, qStr));
 	}
