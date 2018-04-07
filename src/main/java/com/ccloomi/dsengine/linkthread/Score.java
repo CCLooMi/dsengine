@@ -56,7 +56,9 @@ public class Score  extends BaseLinkedThread<MapBean, MapBean>{
 									m++;k++;
 								}else{
 									if(k>1){
-										scc+=k-1;
+										//TODO
+//										scc+=k-1;
+										scc*=k;
 									}
 									k=0;
 								}
@@ -69,7 +71,9 @@ public class Score  extends BaseLinkedThread<MapBean, MapBean>{
 									m++;k++;
 								}else{
 									if(k>2){
-										scc+=k-1;
+										//TOOD
+//										scc+=k-1;
+										scc*=k;
 									}
 									k=0;
 								}
@@ -96,7 +100,9 @@ public class Score  extends BaseLinkedThread<MapBean, MapBean>{
 								}
 							}
 							if(k>2){
-								scc++;
+								//TODO
+//								scc++;
+								scc*=k;
 							}
 						}
 					}
