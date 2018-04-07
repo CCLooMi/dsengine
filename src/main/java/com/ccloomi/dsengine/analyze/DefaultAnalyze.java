@@ -17,9 +17,13 @@ public class DefaultAnalyze extends BaseAnalyze {
 		Map<String, ?>map=new HashMap<>();
 		char[]chars=null;
 		if(value instanceof String) {
-			chars=((String)value).toCharArray();
+			chars=((String)value)
+					.toLowerCase()
+					.toCharArray();
 		}else {
-			chars=String.valueOf(value).toCharArray();
+			chars=String.valueOf(value)
+					.toLowerCase()
+					.toCharArray();
 		}
 		for(int i=0;i<chars.length;i++) {
 			map.put(Integer.toHexString((int)chars[i]), null);

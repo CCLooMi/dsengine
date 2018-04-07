@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ivy-module version="2.0" xmlns:m="http://ant.apache.org/ivy/maven">
-  <info organisation="ccloomi.com" module="dsengine" revision="1.0" status="integration" default="true" publication="20180407154520"/>
+  <info organisation="ccloomi.com" module="dsengine" revision="1.0" status="integration" default="true" publication="20180407173858"/>
   <configurations>
     <conf name="apiElements" visibility="private" extends="compile,runtime"/>
     <conf name="archives" visibility="public"/>
