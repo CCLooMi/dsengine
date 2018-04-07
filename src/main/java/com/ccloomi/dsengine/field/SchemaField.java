@@ -36,54 +36,61 @@ public abstract class SchemaField{
 	public String getName() {
 		return name;
 	}
-	public void setName(String name) {
+	public SchemaField setName(String name) {
 		this.name = name;
+		return this;
 	}
 	public int getLength() {
 		return length;
 	}
 
-	public void setLength(int length) {
+	public SchemaField setLength(int length) {
 		this.length = length;
 		if(length>0) {
 			this.mappedMax=(Integer.MAX_VALUE/length)*length;
 			this.bytes=new byte[length];
 		}
+		return this;
 	}
 
 	public IndexAnalyze getAnalyze() {
 		return analyze;
 	}
 
-	public void setAnalyze(IndexAnalyze analyze) {
+	public SchemaField setAnalyze(IndexAnalyze analyze) {
 		this.analyze = analyze;
+		return this;
 	}
 	public byte[] getBytes() {
 		return bytes;
 	}
-	public void setBytes(byte[] bytes) {
+	public SchemaField setBytes(byte[] bytes) {
 		this.bytes = bytes;
+		return this;
 	}
 	
 	public int getMappedMax() {
 		return mappedMax;
 	}
-	public void setMappedMax(int mappedMax) {
+	public SchemaField setMappedMax(int mappedMax) {
 		this.mappedMax = mappedMax;
+		return this;
 	}
 	public boolean isScoreable() {
 		return scoreable;
 	}
-	public void setScoreable(boolean scoreable) {
+	public SchemaField setScoreable(boolean scoreable) {
 		this.scoreable = scoreable;
 		if(scoreable&&length>0) {
 			this.length+=4;
 		}
+		return this;
 	}
 	public boolean isIndexable() {
 		return indexable;
 	}
-	public void setIndexable(boolean indexable) {
+	public SchemaField setIndexable(boolean indexable) {
 		this.indexable = indexable;
+		return this;
 	}
 }

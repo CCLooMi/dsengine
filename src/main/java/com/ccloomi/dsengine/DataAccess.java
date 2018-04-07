@@ -706,6 +706,9 @@ public class DataAccess {
 	 * @return
 	 */
 	private RocksDB getRocksDBReadOnly(File file) {
+		if(!file.exists()) {
+			file.mkdirs();
+		}
 		try {
 			RocksDB rdb=RocksDB.openReadOnly(file.getAbsolutePath());
 			return rdb;
@@ -722,6 +725,9 @@ public class DataAccess {
 	 * @return
 	 */
 	private RocksDB getRocksDB(File file) {
+		if(!file.exists()) {
+			file.mkdirs();
+		}
 		try {
 			RocksDB rdb=RocksDB.open(file.getAbsolutePath());
 			return rdb;

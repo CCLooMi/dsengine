@@ -10,6 +10,7 @@ import com.ccloomi.dsengine.bean.IndexStatus;
 import com.ccloomi.dsengine.bean.ResultBean;
 import com.ccloomi.dsengine.linkthread.SchemaReader;
 import com.ccloomi.dsengine.query.Query;
+import com.ccloomi.dsengine.query.QueryParser;
 
 /**© 2015-2018 Chenxj Copyright
  * 类    名：DSEngine
@@ -26,6 +27,7 @@ public class DSEngine {
 	private DataAccess da;
 	private IndexStatus indexStatus;
 	private String schemaPath;
+	private Schema schema;
 	
 	public DSEngine(String dp) {
 		dPath=dp;
@@ -49,7 +51,10 @@ public class DSEngine {
 		}
 		return this;
 	}
-	public ResultBean doQuery(String schemaName,Query query) {
+	public ResultBean search(String qStr) {
+		return doQuery(QueryParser.parser(schema, qStr));
+	}
+	private ResultBean doQuery(Query query) {
 		this.schemaReader.setQuery(query);
 		ResultBean resultBean=new ResultBean();
 		byte[]result=new byte[searchReadBufferSize];;
@@ -127,6 +132,7 @@ public class DSEngine {
 		return this;
 	}
 	public DSEngine setSchema(Schema schema) {
+		this.schema=schema;
 		this.schemaPath=Paths.get(dPath, schema.getName()).toString();
 		this.da=new DataAccess(dPath,schema);
 		this.indexWriter.setSchema(schema);

@@ -1,7 +1,8 @@
 group "ccloomi.com"
 version '1.0'
+def artifactId='dsengine'
 apply plugin: 'java'
-apply plugin: 'eclipse'
+apply plugin: 'maven'
 allprojects {
 	repositories {
 		maven{url='http://localhost:8081/repository/alimaven-central/'}
@@ -27,4 +28,28 @@ dependencies {
 		["com.fasterxml.jackson.core:jackson-databind:$jacksonVersion"],
     	fileTree(dir: 'libs', include: '*.jar'))
     testCompile(["junit:junit:4.+"])
+}
+//打包源代码
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+artifacts {
+    archives sourcesJar
+}
+//上传到nexus,在终端中gradle uploadArchives即可
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository(url: "http://localhost:8081/repository/maven-releases/") {
+                authentication(userName: "admin", password: "admin123")
+            }
+            pom.version = "$project.version"
+            pom.artifactId = "$artifactId"
+            pom.groupId = "$project.group"
+        }
+    }
+}
+tasks.withType(JavaCompile) {
+        options.encoding = "UTF-8"
 }

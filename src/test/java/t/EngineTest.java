@@ -49,10 +49,10 @@ public class EngineTest {
 			String queryStr=sc.nextLine();
 			if(!"exit".equalsIgnoreCase(queryStr)){
 				if(!"".equals(queryStr)){
-					ResultBean result=engine.doQuery("t_info", QueryParser.parser(schema, queryStr));
+					ResultBean result=engine.search(queryStr);
 					System.out.println(result);
 				}else{
-					ResultBean result=engine.doQuery("t_info", QueryParser.parser(schema, "{info:'东 蜀山'}"));
+					ResultBean result=engine.search("{info:'东 蜀山'}");
 					System.out.println(result);
 				}
 			}else{
