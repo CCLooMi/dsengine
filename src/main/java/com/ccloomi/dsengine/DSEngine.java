@@ -51,7 +51,7 @@ public class DSEngine {
 		}
 		return this;
 	}
-	public ResultBean search(Map<String, String>qm) {
+	public ResultBean search(Map<String, Object>qm) {
 		return doQuery(QueryParser.parser(schema, qm));
 	}
 	public ResultBean search(String qStr) {
@@ -80,10 +80,11 @@ public class DSEngine {
 								count++;
 								schemaReader.addData(docid);
 								//大部分正常的查询是不会超过这个比例的，恶意查询会被立马阻止
-								if((float)count/(searchReadBufferSize<<3)>searchMaxRate){
-									countDocs+=count;
-									break query;
-								}
+//								if((float)count/(searchReadBufferSize<<3)>searchMaxRate){
+//									countDocs+=count;
+//									break query;
+//								}
+								//TODO
 							}else {
 								countDocs+=count;
 								break query;

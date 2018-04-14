@@ -10,6 +10,8 @@ package com.ccloomi.dsengine;
 public class EngineConfigure {
 	/**搜索结果最大显示数量*/
 	public static final int topMax=1024;
+	/**默认分页大小*/
+	public static final int pageSize=10;
 	/**搜索时读取索引文件缓存大小<br>缓存不可过大也不能太小，
 	 * 过小则IO太过频繁，
 	 * 过大则不能跳过大部分读取IO*/

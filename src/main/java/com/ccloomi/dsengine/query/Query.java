@@ -21,6 +21,9 @@ public abstract class Query {
 	protected Map<String, String[]>fieldKSMap;
 	protected FieldKS[] fieldKSArray;
 	protected Map<String, QueryTree> mtree;
+	/**小于0表示不分页查询*/
+	protected int page;
+	protected int pageSize;
 	public FieldKS[] getFieldKSArray(){
 		if(fieldKSArray!=null){
 			return fieldKSArray;
@@ -49,5 +52,20 @@ public abstract class Query {
 
 	public void setMtree(Map<String, QueryTree> mtree) {
 		this.mtree = mtree;
+	}
+
+	public int page() {
+		return page;
+	}
+	public Query page(int page) {
+		this.page = page;
+		return this;
+	}
+	public int pageSize() {
+		return pageSize;
+	}
+	public Query pageSize(int pageSize) {
+		this.pageSize = pageSize;
+		return this;
 	}
 }

@@ -1,6 +1,5 @@
 package com.ccloomi.dsengine.query;
 
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -8,6 +7,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Stack;
 
+import com.ccloomi.dsengine.EngineConfigure;
 import com.ccloomi.dsengine.Schema;
 import com.ccloomi.dsengine.analyze.IndexAnalyze;
 import com.ccloomi.dsengine.field.SchemaField;
@@ -33,7 +33,7 @@ public class QueryParser {
 	
 	@SuppressWarnings("unchecked")
 	public static Query parser(Schema schema,String el) {
-		Map<String, String>m=new HashMap<>();
+		Map<String, Object>m=new HashMap<>();
 		try {
 			JsonParser jp=jsonFactory.createParser(el);
 			m=objectMapper.readValue(jp, Map.class);
@@ -47,14 +47,33 @@ public class QueryParser {
 	 * @param el
 	 * @return
 	 */
-	public static Query parser(Schema schema,Map<String, String>qm){
+	public static Query parser(Schema schema,Map<String, Object>qm){
 		//属性和对应关键字MAP
 		Map<String, String[]>fieldKSMap=new HashMap<>();
 		Map<String, QueryTree> mtree=new HashMap<>();
-		for(Entry<String, String>entry:qm.entrySet()){
+		//小于0表示不分页查询
+		int page=-1;
+		int pageSize=EngineConfigure.pageSize;
+		if(qm.containsKey("page")) {
+			Object pg=qm.remove("page");
+			if(pg instanceof Integer) {
+				page=(int)pg;
+			}else {
+				page=Integer.parseInt((String)pg);
+			}
+		}
+		if(qm.containsKey("pageSize")) {
+			Object ps=qm.remove("pageSize");
+			if(ps instanceof Integer) {
+				pageSize=(int)ps;
+			}else {
+				pageSize=Integer.parseInt((String)ps);
+			}
+		}
+		for(Entry<String,Object> entry:qm.entrySet()){
 			SchemaField field=schema.getSchemaField(entry.getKey());
 			if(field!=null){
-				String value=entry.getValue();
+				String value=(String)entry.getValue();
 				if(value==null||"".equals(value)){
 					continue;
 				}
@@ -98,7 +117,9 @@ public class QueryParser {
 				mtree.put(entry.getKey(), transformELTree(entry.getKey(),transform(sb.toString())));
 			}
 		}
-		return new FieldQuery(fieldKSMap, mtree);
+		return new FieldQuery(fieldKSMap, mtree)
+				.page(page)
+				.pageSize(pageSize);
 	}
 	
 	/**
