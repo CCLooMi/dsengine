@@ -111,7 +111,7 @@ public class Sort extends BaseLinkedThread<MapBean, MapBean[]>{
 	public <E>E get(){
 		MapBean[]result=null;
 		try{
-			while(true){
+			loop:while(true){
 				if(isComplete()){
 					Arrays.sort(docs,baseSort);
 					if(query.page()<0) {
@@ -128,7 +128,10 @@ public class Sort extends BaseLinkedThread<MapBean, MapBean[]>{
 						}
 					}else {
 						if(docCount<=query.page()*query.pageSize()) {
-							return (E) new MapBean[0];
+							result= new MapBean[0];
+							//不直接返回是因为需要调用后面的reset方法，
+							//如果直接返回，则需要在返回之前reset
+							break loop;
 						}else {
 							if(max<topMax) {
 								if(docCount<max) {
