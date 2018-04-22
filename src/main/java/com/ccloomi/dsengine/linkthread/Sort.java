@@ -42,6 +42,9 @@ public class Sort extends BaseLinkedThread<MapBean, MapBean[]>{
 					float v2=o2.getScore();
 					if(v1>v2)return 1;
 					if(v1<v2)return -1;
+					//解决不打分排序失败问题,小的id在前
+					if(o1.getDocId()<o2.getDocId())return 1;
+					if(o1.getDocId()>o2.getDocId())return -1;
 					return 0;
 				}
 			}
