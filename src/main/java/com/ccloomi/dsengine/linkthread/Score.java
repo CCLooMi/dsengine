@@ -15,12 +15,15 @@ public class Score  extends BaseLinkedThread<MapBean, MapBean>{
 	}
 	@Override
 	public MapBean processData(MapBean t) {
-		t.setScore(score(t));
+		if(t!=null) {
+			try {
+				t.setScore(score(t));
+			}catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		this.current++;
 		return t;
-	}
-	@Override
-	public void reset() {
-		
 	}
 	private float score(MapBean t){
 		float score=0;

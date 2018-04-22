@@ -1,8 +1,6 @@
 package t;
 
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Scanner;
 
 import com.ccloomi.dsengine.DSEngine;
@@ -11,8 +9,6 @@ import com.ccloomi.dsengine.analyze.DefaultAnalyze;
 import com.ccloomi.dsengine.bean.ResultBean;
 import com.ccloomi.dsengine.field.IdField;
 import com.ccloomi.dsengine.field.StringField;
-import com.ccloomi.dsengine.query.QueryParser;
-import com.ccloomi.dsengine.util.UUID;
 
 /**© 2015-2018 Chenxj Copyright
  * 类    名：EngineTest

@@ -26,13 +26,17 @@ public class SchemaReader extends BaseLinkedThread<Long, MapBean> implements Clo
 	public void close() throws IOException {
 		// TODO 需要关闭所有打开的文件资源
 	}
-
-	@Override
-	public void reset() {}
-
+	
 	@Override
 	public MapBean processData(Long docId) {
-		return da.readDocumentFieldDataInQuery(query,docId);
+		MapBean mb= null;
+		try {
+			mb=da.readDocumentFieldDataInQuery(query,docId);
+		}catch (Exception e) {
+			e.printStackTrace();
+		}
+		this.current++;
+		return mb;
 	}
 	@Override
 	@SuppressWarnings("unchecked")

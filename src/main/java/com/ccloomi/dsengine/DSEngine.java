@@ -1,6 +1,5 @@
 package com.ccloomi.dsengine;
 
-import static com.ccloomi.dsengine.EngineConfigure.searchMaxRate;
 import static com.ccloomi.dsengine.EngineConfigure.searchReadBufferSize;
 
 import java.nio.file.Paths;
@@ -103,8 +102,6 @@ public class DSEngine {
 		}else{
 			schemaReader.setTotal(-1);
 		}
-		schemaReader.complete();
-		//必须在调用complete方法之后才能调用get，不然无法退出
 		resultBean.setHits(schemaReader.get());
 		
 		return resultBean;

@@ -10,10 +10,9 @@ import com.ccloomi.dsengine.query.Query;
  */
 public abstract class BaseLinkedThread<DT, RT> extends CCLinkedThread<DT, RT>{
 	protected Query query;
-	public void freeResources() {
-		
-	}
-	
+	public void freeResources() {}
+	@Override
+	public void onComplete() {}
 	@SuppressWarnings("unchecked")
 	public void setQuery(Query query){
 		this.query=query;
@@ -21,12 +20,4 @@ public abstract class BaseLinkedThread<DT, RT> extends CCLinkedThread<DT, RT>{
 			((BaseLinkedThread<DT, RT>)nextThread).setQuery(query);
 		}
 	}
-	/**
-	 * @名称 reset
-	 * @说明	重置线程环境
-	 * @作者 Chenxj
-	 * @邮箱 chenios@foxmail.com
-	 * @日期 2017年1月17日-上午10:19:26
-	 */
-	public abstract void reset();
 }

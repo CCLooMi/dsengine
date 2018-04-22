@@ -17,9 +17,8 @@ import com.ccloomi.dsengine.query.Query;
  * @日期 2017年1月16日-下午1:52:15
  */
 public class Sort extends BaseLinkedThread<MapBean, MapBean[]>{
-	
+	private boolean complete=false;
 	private DataAccess da;
-	
 	private MapBean[]docs;
 	private Comparator<MapBean>baseSort;
 	private int docCount=0;
@@ -65,47 +64,54 @@ public class Sort extends BaseLinkedThread<MapBean, MapBean[]>{
 	}
 	@Override
 	public MapBean[] processData(MapBean t) {
-		if(docCount<max){//数据填充阶段
-			docs[docCount]=t;
-		}else if(docCount==max){//数据准备分界点
-			Arrays.sort(docs,baseSort);
-			if(t.getScore()>docs[0].getScore()){
-				//回收map对象
-				da.recycMapBean(docs[0]);
-				//对已排序数组没有必要两两交换，只需要所有比t小的数据左移动就可以了
-				int i=1;
-				for(;i<max;i++){
-					if(docs[i].getScore()<t.getScore()){
-						docs[i-1]=docs[i];
+		if(t!=null) {
+			try {
+				if(docCount<max){//数据填充阶段
+					docs[docCount]=t;
+				}else if(docCount==max){//数据准备分界点
+					Arrays.sort(docs,baseSort);
+					if(t.getScore()>docs[0].getScore()){
+						//回收map对象
+						da.recycMapBean(docs[0]);
+						//对已排序数组没有必要两两交换，只需要所有比t小的数据左移动就可以了
+						int i=1;
+						for(;i<max;i++){
+							if(docs[i].getScore()<t.getScore()){
+								docs[i-1]=docs[i];
+							}else{
+								break;
+							}
+						}
+						docs[i-1]=t;
 					}else{
-						break;
+						//回收Map对象
+						da.recycMapBean(t);
+					}
+				}else{//数据查找阶段
+					if(t.getScore()>docs[0].getScore()){
+						//回收map对象
+						da.recycMapBean(docs[0]);
+						//对已排序数组没有必要两两交换，只需要所有比t小的数据左移动就可以了
+						int i=1;
+						for(;i<max;i++){
+							if(docs[i].getScore()<t.getScore()){
+								docs[i-1]=docs[i];
+							}else{
+								break;
+							}
+						}
+						docs[i-1]=t;
+					}else {
+						//回收Map对象
+						da.recycMapBean(t);
 					}
 				}
-				docs[i-1]=t;
-			}else{
-				//回收Map对象
-				da.recycMapBean(t);
-			}
-		}else{//数据查找阶段
-			if(t.getScore()>docs[0].getScore()){
-				//回收map对象
-				da.recycMapBean(docs[0]);
-				//对已排序数组没有必要两两交换，只需要所有比t小的数据左移动就可以了
-				int i=1;
-				for(;i<max;i++){
-					if(docs[i].getScore()<t.getScore()){
-						docs[i-1]=docs[i];
-					}else{
-						break;
-					}
-				}
-				docs[i-1]=t;
-			}else {
-				//回收Map对象
-				da.recycMapBean(t);
+				docCount++;
+			}catch (Exception e) {
+				e.printStackTrace();
 			}
 		}
-		docCount++;
+		this.current++;
 		return null;
 	}
 	
@@ -115,7 +121,7 @@ public class Sort extends BaseLinkedThread<MapBean, MapBean[]>{
 		MapBean[]result=null;
 		try{
 			loop:while(true){
-				if(isComplete()){
+				if(complete){
 					Arrays.sort(docs,baseSort);
 					if(query.page()<0) {
 						if(docCount<max){
@@ -196,10 +202,15 @@ public class Sort extends BaseLinkedThread<MapBean, MapBean[]>{
 	
 	@Override
 	public void reset() {
+		super.reset();
 		this.docCount=0;
-		this.complete=false;
 		for(int i=0;i<max;i++){
 			docs[i]=null;
 		}
+		this.complete=false;
+	}
+	@Override
+	public void onComplete() {
+		this.complete=true;
 	}
 }
