@@ -30,7 +30,7 @@ public class IndexWriter {
 	//Status
 	private Map<String, Long>result;
 	private long position=0;
-	private int offset=63;
+	private int offset=0;
 	private int dataLength=0;
 	private Schema schema;
 	
@@ -66,7 +66,7 @@ public class IndexWriter {
 		return this;
 	}
 	public IndexWriter addDocument(String dataPath,Map<String,? extends Object>doc) {
-		long docId=((position<<3)+(dataLength<<6)+(63-offset));
+		long docId=((position<<3)+(dataLength<<6)+offset);
 		for(Entry<String, ? extends Object>entry:doc.entrySet()) {
 			//生成索引数据
 			SchemaField sfield=schema.getSchemaField(entry.getKey());
@@ -74,27 +74,34 @@ public class IndexWriter {
 			if(sfield.isIndexable()) {
 				IndexAnalyze analyze=sfield.getAnalyze();
 				String[]ds=analyze.analyze(entry.getValue());
-				for(String dt:ds){
-					String key=entry.getKey()+"-"+dt;
-					Long a=result.get(key);
+
+				StringBuilder bkey=new StringBuilder();
+				String key=null;
+				Long a=null;
+				for(int i=0;i<ds.length;i++){
+					bkey.delete(0, bkey.length());
+					bkey.append(entry.getKey()).append('-').append(ds[i]);
+					key=bkey.toString();
+					
+					a=result.get(key);
 					if(a!=null){
 						result.put(key, (1l<<offset)|a);
 					}else{
 						result.put(key, 1l<<offset);
-						k2lMap.put(key, new long[1024*bufSize]);
+						k2lMap.put(key, new long[bufSize<<10]);
 					}
 				}
 			}
 			da.writeFieldData(docId,sfield,entry.getValue());
 		}
-		offset--;
-		if(offset<0){
+		offset++;
+		if(offset>63){
 			for(Entry<String, Long>entry:result.entrySet()){
 				long[]bs=k2lMap.get(entry.getKey());
 				bs[dataLength]=entry.getValue();
 				result.put(entry.getKey(), 0l);
 			}
-			offset=63;
+			offset=0;
 			dataLength++;
 			if(dataLength>>10>=bufSize){
 				writeToDisk(dataPath);
@@ -116,7 +123,7 @@ public class IndexWriter {
 		dataLength=0;
 	}
 	public void forceWriteToDisk(String dataPath){
-		if(dataLength>0||offset<63){
+		if(dataLength>0||offset>0){
 			for(Entry<String, Long>entry:result.entrySet()){
 				long[]bs=k2lMap.get(entry.getKey());
 				bs[dataLength]=entry.getValue();
@@ -142,7 +149,7 @@ public class IndexWriter {
 		this.offset=status.getOffset();
 		this.result=status.getKlMap();
 		//预先创建好已有关键字的long数组
-		if(this.offset<63) {
+		if(this.offset>0) {
 			for(Entry<String, Long>entry:result.entrySet()){
 				//*1024 equals <<10
 				k2lMap.put(entry.getKey(), new long[bufSize<<10]);

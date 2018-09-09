@@ -19,6 +19,7 @@ import com.ccloomi.dsengine.query.QueryParser;
  * 日    期：2018年3月24日-下午5:31:56
  */
 public class DSEngine {
+	private int[]m0;
 	private String dPath;
 	private IndexReader indexReader;
 	private IndexWriter indexWriter;
@@ -29,9 +30,13 @@ public class DSEngine {
 	private Schema schema;
 	
 	public DSEngine(String dp) {
+		m0=new int[129];
 		dPath=dp;
 		indexReader=new IndexReader();
 		indexWriter=new IndexWriter();
+		for(int i=0;i<8;i++) {
+			m0[1<<i]=i;
+		}
 	}
 	public DSEngine updateDocument(Map<String, ? extends Object>doc) {
 		Object id=doc.remove("id");
@@ -70,26 +75,17 @@ public class DSEngine {
 			int rl=result.length;
 			int count=0;
 			for(int j=0;j<rl;j++){
-				byte b=result[j];
-				if(b!=0){
-					for(byte offset=7;offset>-1;offset--){
-						if((b&(1<<offset))!=0){
-							long docid=new Long(((i+j)<<3)+7-offset);
-							if(docid<totalDocs) {
-								count++;
-								schemaReader.addData(docid);
-								//大部分正常的查询是不会超过这个比例的，恶意查询会被立马阻止
-//								if((float)count/(searchReadBufferSize<<3)>searchMaxRate){
-//									countDocs+=count;
-//									break query;
-//								}
-								//TODO
-							}else {
-								countDocs+=count;
-								break query;
-							}
-						}
+				int b=result[j]&0xff;
+				while(b>0) {
+					long docid=new Long(((i+j)<<3)+m0[b&-b]);
+					if(docid<totalDocs) {
+						schemaReader.addData(docid);
+						count++;
+					}else {
+						countDocs+=count;
+						break query;
 					}
+					b-=(b&-b);
 				}
 			}
 			countDocs+=count;

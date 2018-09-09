@@ -13,6 +13,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Paths;
@@ -355,7 +356,9 @@ public class DataAccess {
 			File file=new File(fileName);
 			raf=new RandomAccessFile(file, "rw");
 			FileChannel fc=raf.getChannel();
-			ByteBuffer buf=ByteBuffer.allocate(bufSize);
+			ByteBuffer buf=ByteBuffer
+					.allocate(bufSize)
+					.order(ByteOrder.LITTLE_ENDIAN);
 			buf.clear();
 			int n=bufSize<<3;
 			int k=0;
