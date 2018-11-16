@@ -3,6 +3,8 @@ package com.ccloomi.dsengine.util;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -180,26 +182,16 @@ public class StringUtil {
 	 * @return
 	 */
 	public static float baseScore(String str) {
-		float score = 0;
-		// 字词的数量
-		int n = 0;
-		char[] strChars = str.toCharArray();
-		int strCharsLength = strChars.length;
-		// 统计字符串中非重复字符个数
-		int strSetLength = 1;
-		Arrays.sort(strChars);
-		char tc = strChars[0];
-		for (int j = 1; j < strCharsLength; j++) {
-			if (tc != strChars[j]) {
-				strSetLength++;
-				tc = strChars[j];
+		if(str==null||str.length()==0)return 0;
+		Set<Character>cset=new HashSet<>();
+		int sl=0;
+		for(int i=0;i<str.length();i++) {
+			if(!cset.contains(str.charAt(i))) {
+				sl++;
+				cset.add(str.charAt(i));
 			}
 		}
-		float repeat = (float) strCharsLength / strSetLength;
-		score += (float) n / strCharsLength;
-		score = score / repeat;
-		score -= Math.pow(((repeat - 1) / repeat), repeat);
-		return score;
+		return (float) (sl-str.length()) / str.length();
 	}
 	//#####################################################################################
 	//#

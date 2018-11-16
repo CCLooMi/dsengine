@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>ccloomi.com</groupId>
   <artifactId>dsengine</artifactId>
-  <version>1.0</version>
+  <version>2.0</version>
   <dependencies>
     <dependency>
       <groupId>org.rocksdb</groupId>
