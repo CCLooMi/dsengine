@@ -22,7 +22,7 @@ public class IndexStatus implements Serializable{
 	private Queue<Long>deletedDocIds;
 	public IndexStatus() {
 		this.position=0;
-		this.offset=63;
+		this.offset=0;
 		this.klMap=new HashMap<>();
 		this.deletedDocIds=new ConcurrentLinkedQueue<>();
 	}

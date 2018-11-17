@@ -13,3 +13,7 @@ hs_err_pid*
 .gradle/
 bin/
 data/
+src/main/java/com/.DS_Store
+src/.DS_Store
+build/ivy.xml
+.DS_Store
