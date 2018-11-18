@@ -31,17 +31,14 @@ public class Score  extends BaseLinkedThread<MapBean, MapBean>{
 		int fkssl=fkss.length;
 		for(int i=0;i<fkssl;i++){
 			int fvsl=fkss[i].getFieldValuesl();
-			char[]strChars=((String)t.getAttr(fkss[i].getFieldName()))
-					.toCharArray();
-			int strl=strChars.length;
+			String field=(String)t.getAttr(fkss[i].getFieldName());
 			for(int j=0;j<fvsl;j++){
 				//每个关键字对应的char数组
-				char[]fvsc=fkss[i].getFieldValueChars()[j];
-				int fvscl=fvsc.length;
+				String field_s=fkss[i].getFieldValues()[j];
 				//带-号的不打匹配分，因为没有意义
-				if(fvsc[0]=='-')break;
-				int N=strl;
-				int n=fvscl;
+				if(field_s.charAt(0)=='-')break;
+				int N=field.length();
+				int n=field_s.length();
 				if(n>N){N^=n;n^=N;N^=n;}
 				//得分
 				float scc=0;
@@ -52,16 +49,15 @@ public class Score  extends BaseLinkedThread<MapBean, MapBean>{
 				int Nn=N-n+1;
 				//根据两个字符串长度的差异来分别执行不同的打分算法可大幅提升性能
 				if(Nn>n){
-					if(strl>fvscl){
+					if(field.length()>field_s.length()){
 						for(int ii=0;ii<Nn;ii++){
 							for(int jj=0;jj<n;jj++){
-								if(strChars[jj+ii]==fvsc[jj]){
+								if(field.charAt(jj+ii)==field_s.charAt(jj)){
 									m++;k++;
 								}else{
 									if(k>1){
 										//TODO
-//										scc+=k-1;
-										scc+=k*k;
+										scc+=k-1;
 									}
 									k=0;
 								}
@@ -70,13 +66,12 @@ public class Score  extends BaseLinkedThread<MapBean, MapBean>{
 					}else{
 						for(int ii=0;ii<Nn;ii++){
 							for(int jj=0;jj<n;jj++){
-								if(fvsc[jj+ii]==strChars[jj]){
+								if(field_s.charAt(jj+ii)==field.charAt(jj)){
 									m++;k++;
 								}else{
 									if(k>2){
 										//TODO
-//										scc+=k-1;
-										scc+=k*k;
+										scc+=k-1;
 									}
 									k=0;
 								}
@@ -89,13 +84,13 @@ public class Score  extends BaseLinkedThread<MapBean, MapBean>{
 				}else{
 					k=0;
 					//计算匹配分
-					for(int jj=0;jj<strl;jj++){
-						if(fkss[i].getFieldValueSet()[j].contains(new Integer(strChars[jj]))){
+					for(int jj=0;jj<field.length();jj++){
+						if(fkss[i].isInVset(j, field.charAt(jj))){
 							m++;
 							k++;
 							if(jj>0){
-								int a=fkss[i].getFieldValues()[j].indexOf(strChars[jj]);
-								int b=fkss[i].getFieldValues()[j].indexOf(strChars[jj-1]);
+								int a=fkss[i].getFieldValues()[j].indexOf(field.charAt(jj));
+								int b=fkss[i].getFieldValues()[j].indexOf(field.charAt(jj-1));
 								if(a-b==1&&b!=-1){
 									scc++;
 								}else{
@@ -104,17 +99,16 @@ public class Score  extends BaseLinkedThread<MapBean, MapBean>{
 							}
 							if(k>2){
 								//TODO
-//								scc++;
-								scc+=k*k;
+								scc++;
 							}
 						}
 					}
 				}
 				//第一个字符相同权值更高
-				if(strl>0&&strChars[0]==fvsc[0]){
+				if(field.length()>0&&field.charAt(0)==field_s.charAt(0)){
 					m++;
 				}
-				scc+=(float)m/strl;
+				scc+=(float)m/field.length();
 				score+=t.getAttrScore(fkss[i].getFieldName())+scc;
 			}
 		}

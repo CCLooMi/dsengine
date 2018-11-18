@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ivy-module version="2.0" xmlns:m="http://ant.apache.org/ivy/maven">
-  <info organisation="ccloomi.com" module="dsengine" revision="2.0" status="integration" publication="20181116115019"/>
+  <info organisation="ccloomi.com" module="dsengine" revision="2.0" status="integration" publication="20181117124742"/>
   <configurations>
     <conf name="annotationProcessor" visibility="private"/>
     <conf name="apiElements" visibility="private" extends="runtime"/>

@@ -15,61 +15,34 @@ public class FieldKS{
 	private String fieldName;
 	/**查询字段的值数组*/
 	private String[] fieldValues;
-	/**查询字段每个值对应的char数组*/
-	private char[][] fieldValueChars;
 	/**查询字段值Set*/
 	private Set<Integer>[] fieldValueSet;
-	/**查询字段值数组长度*/
-	private int fieldValuesl;
 	
 	@SuppressWarnings("unchecked")
 	public FieldKS(String fieldName,String[]fieldValues){
-		this.setFieldName(fieldName);
+		this.fieldName=fieldName;
 		this.fieldValues=fieldValues;
-		this.fieldValuesl=fieldValues.length;
-		this.fieldValueChars=new char[fieldValuesl][];
-		this.fieldValueSet=new Set[fieldValuesl];
+		this.fieldValueSet=new Set[fieldValues.length];
 		
-		for(int i=0;i<fieldValuesl;i++){
-			fieldValueChars[i]=fieldValues[i].toCharArray();
-			int fvcl=fieldValueChars[i].length;
+		for(int i=0;i<fieldValues.length;i++){
 			Set<Integer>set=new HashSet<>();
-			for(int j=0;j<fvcl;j++){
+			for(int j=0;j<fieldValues[i].length();j++){
 				//防止自动装箱以提高性能
-//				set.add(new Character(fieldValueChars[i][j]));
-				set.add(new Integer(fieldValueChars[i][j]));
+				set.add(new Integer(fieldValues[i].charAt(j)));
 			}
 			fieldValueSet[i]=set;
 		}
 	}
+	public boolean isInVset(int i,char c) {
+		return fieldValueSet[i].contains(new Integer(c));
+	}
 	public String getFieldName() {
 		return fieldName;
-	}
-	public void setFieldName(String fieldName) {
-		this.fieldName = fieldName;
 	}
 	public String[] getFieldValues() {
 		return fieldValues;
 	}
-	public void setFieldValues(String[] fieldValues) {
-		this.fieldValues = fieldValues;
-	}
-	public char[][] getFieldValueChars() {
-		return fieldValueChars;
-	}
-	public void setFieldValueChars(char[][] fieldValueChars) {
-		this.fieldValueChars = fieldValueChars;
-	}
 	public int getFieldValuesl() {
-		return fieldValuesl;
-	}
-	public void setFieldValuesl(int fieldValuesl) {
-		this.fieldValuesl = fieldValuesl;
-	}
-	public Set<Integer>[] getFieldValueSet() {
-		return fieldValueSet;
-	}
-	public void setFieldValueSet(Set<Integer>[] fieldValueSet) {
-		this.fieldValueSet = fieldValueSet;
+		return fieldValues.length;
 	}
 }
