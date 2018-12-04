@@ -127,7 +127,7 @@ public class ResultBean{
 			StringBuilder sb=new StringBuilder();
 			sb.append("{took:").append(took).append("ms")
 			.append(",total:").append(total)
-			.append(",hits:").append(hits)
+			.append(",hits:").append(Arrays.toString(hits))
 			.append('}');
 			return sb.toString();
 		}

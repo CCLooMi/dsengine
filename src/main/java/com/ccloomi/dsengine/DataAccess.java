@@ -383,7 +383,7 @@ public class DataAccess {
 			}
 			e.printStackTrace();
 		}finally {
-			try {raf.close();}
+			try {if(raf!=null)raf.close();}
 			catch (IOException e) {}
 		}
 	}
@@ -444,7 +444,7 @@ public class DataAccess {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}finally {
-			try {objOut.close();} catch (IOException e) {};
+			try {if(objOut!=null)objOut.close();} catch (IOException e) {};
 		}
 	}
 	public IndexStatus getIndexStatus() {
@@ -595,7 +595,7 @@ public class DataAccess {
 		RandomAccessFile raf = null;
 		MappedByteBuffer mbb = null;
 		String fpath=StringUtil.getHashPathFile(filePath,fname,false);
-		int p=(int) (position/Integer.MAX_VALUE);
+		long p=(long) (position/Integer.MAX_VALUE);
 		long key=((long)fpath.hashCode()<<32)|p;
 		try{
 			if(fileMBB.containsKey(key)){
